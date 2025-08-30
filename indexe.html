@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Générateur de QR Code Personnalisé</title>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: url('qr.jpg');
+            ;
+            color: white;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 15px;
+            text-align: center;
+            width: 300px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        input[type="text"] {
+            width: 80%;
+            padding: 8px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            border: solid 1px blue;
+            font-size: 0.85rem;
+            background-color: #fff;
+            color: #333;
+            text-align: center;
+        }
+
+        .icon-buttons {
+            display: flex;
+            justify-content: space-around;
+            gap: 5px; /* Espacement réduit */
+            margin-top: 10px;
+        }
+
+        .icon-buttons button {
+            background: #007bff;
+            border: none;
+            color: white;
+            border-radius: 25%;
+            width: 32px;
+            height: 32px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .icon-buttons button:hover {
+            background: #0056b3;
+        }
+
+        .download-button.active {
+            animation: pulse 1.5s infinite, move 1s ease-out forwards; /* Ajout de l'animation de mouvement */
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.1); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        @keyframes move {
+            0% {
+                transform: translateY(0); /* Position initiale */
+            }
+            50% {
+                transform: translateY(-10px); /* Déplacement vers le haut */
+            }
+            100% {
+                transform: translateY(0); /* Retour à la position d'origine */
+            }
+        }
+
+        .settings-panel {
+            display: none;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px;
+            border-radius: 10px;
+            margin-top: 10px;
+        }
+
+        #qrcode {
+            margin-top: 15px;
+            position: relative;
+        }
+
+        #qrcode canvas {
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>QR Code Personnalisé</h1>
+        <input type="text" id="textInput" placeholder="Texte ou URL">
+        <div class="icon-buttons">
+            <button onclick="generateQRCode()">🖨️</button>
+            <button onclick="resetForm()">🔄</button>
+            <button class="download-button" onclick="downloadQRCode()">⬇</button>
+            <button onclick="toggleSettings()">⚙️</button>
+        </div>
+        <div id="qrcode"></div>
+        <div class="settings-panel" id="settingsPanel">
+            <input type="color" id="foregroundColor" value="#000000">
+            <input type="color" id="backgroundColor" value="#ffffff">
+        </div>
+    </div>
+
+    <script>
+        let generatedCanvas = null;
+        
+        function toggleSettings() {
+            const settingsPanel = document.getElementById('settingsPanel');
+            settingsPanel.style.display = settingsPanel.style.display === 'none' || settingsPanel.style.display === '' ? 'block' : 'none';
+        }
+
+        async function generateQRCode() {
+            const text = document.getElementById('textInput').value.trim();
+            const foregroundColor = document.getElementById('foregroundColor').value;
+            const backgroundColor = document.getElementById('backgroundColor').value;
+            const qrCodeContainer = document.getElementById('qrcode');
+
+            qrCodeContainer.innerHTML = '';
+            generatedCanvas = null;
+
+            if (!text) {
+                alert('Veuillez entrer un texte ou une URL.');
+                return;
+            }
+
+            const canvas = document.createElement('canvas');
+            const size = 125;
+            canvas.width = size;
+            canvas.height = size;
+
+            const ctx = canvas.getContext('2d');
+
+            await QRCode.toCanvas(canvas, text, {
+                width: size,
+                margin: 2,
+                color: { dark: foregroundColor, light: backgroundColor }
+            });
+
+            qrCodeContainer.appendChild(canvas);
+            generatedCanvas = canvas;
+            document.querySelector('.download-button').classList.add('active');
+        }
+
+        function resetForm() {
+            document.getElementById('textInput').value = '';
+            document.getElementById('foregroundColor').value = '#000000';
+            document.getElementById('backgroundColor').value = '#ffffff';
+            const qrCodeContainer = document.getElementById('qrcode');
+            qrCodeContainer.innerHTML = '';
+            generatedCanvas = null;
+            document.querySelector('.download-button').classList.remove('active');
+        }
+
+        function downloadQRCode() {
+            if (!generatedCanvas) {
+                alert('Aucun QR code à télécharger. Veuillez en générer un d\'abord.');
+                return;
+            }
+            const link = document.createElement('a');
+            link.download = 'qrcode.png';
+            link.href = generatedCanvas.toDataURL();
+            link.click();
+        }
+    </script>
+</body>
+</html>
